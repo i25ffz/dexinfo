@@ -11,6 +11,7 @@ class DexParser:
         self.depth = 2
         self.classes = {}
         self.infos = {}
+        self.linearAlloc = 0
 
     def init(self, mapping, depth):
         # reset the depth
@@ -57,7 +58,11 @@ class DexParser:
                 if len(clsname) > self.depth:
                     pkg = '.'.join(clsname[0:self.depth])
                 else:
-                    pkg = '.'.join(clsname)
+                    if  len(clsname) == 1:
+                        pkg = '/'
+                    else:
+                        pkg = '.'.join(clsname)
+
                 # insert or update pkg size
                 if pkg in self.infos:
                     self.infos[pkg] += int(values[1])
@@ -66,6 +71,16 @@ class DexParser:
             else:
                 if line.startswith('LinearAlloc'):
                     print line
+                    pos0 = line.find('[')
+                    pos1 = line.find(']')
+                    try:
+                        self.linearAlloc = int(line[(pos0 + 1):pos1])
+                    except Exception as e:
+                        self.linearAlloc = -1
+                        print str(e)
+
+    def get_linear_alloc(self):
+        return self.linearAlloc
 
     def print_info(self):
         # print map
@@ -96,3 +111,4 @@ if __name__ == '__main__':
     parser.init(mapping, depth)
     parser.parse(sys.argv[1])
     parser.print_info()
+    print 'LinearAlloc:', parser.get_linear_alloc()
